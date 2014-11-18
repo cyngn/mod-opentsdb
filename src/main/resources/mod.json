@@ -1,0 +1,11 @@
+{
+  "main": "com.cyngn.mods.opentsdb.OpenTsDbReporter",
+  "worker": true,
+  "multi-threaded": true,
+
+  "description":"OpenTsDb metric reporter module for Vert.x",
+  "licenses": ["The Apache Software License Version 2.0"],
+  "author": "jtruelove",
+  "keywords": ["opentsdb", "metrics"],
+  "homepage": "https://github.com/cyngn/mod-opentsdb"
+}

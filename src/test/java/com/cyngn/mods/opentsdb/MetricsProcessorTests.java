@@ -14,6 +14,7 @@
  */
 package com.cyngn.mods.opentsdb;
 
+import com.cyngn.mods.opentsdb.client.MetricsSender;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,9 +28,24 @@ import static org.junit.Assert.assertEquals;
  */
 public class MetricsProcessorTests {
 
+    private MetricsSender sender;
+    private AtomicInteger count;
+
     @Before
     public void setUp(){
         MetricsProcessor.setupWorkload(1);
+        count = new AtomicInteger(0);
+        sender = new MetricsSender() {
+            @Override
+            public void sendData(byte[] data) {
+                count.incrementAndGet();
+            }
+
+            @Override
+            public boolean isConnected() {
+                return true;
+            }
+        };
     }
 
     @Test
@@ -40,12 +56,7 @@ public class MetricsProcessorTests {
         // add more data into queue
         data.add(testStr);
         data.add(testStr);
-
-        final AtomicInteger count = new AtomicInteger(0);
-        MetricsProcessor.processMetrics(data, testStr.getBytes().length * 3, (byteData) -> {
-            count.incrementAndGet();
-        });
-
+        MetricsProcessor.processMetrics(data, testStr.getBytes().length * 3, sender);
         assertEquals(count.intValue(), 1);
     }
 
@@ -57,10 +68,7 @@ public class MetricsProcessorTests {
         data.add(testStr);
         data.add(testStr);
 
-        final AtomicInteger count = new AtomicInteger(0);
-        MetricsProcessor.processMetrics(data, testStr.getBytes().length, (byteData) -> {
-            count.incrementAndGet();
-        });
+        MetricsProcessor.processMetrics(data, testStr.getBytes().length, sender);
 
         assertEquals(count.intValue(), 2);
     }
@@ -77,16 +85,11 @@ public class MetricsProcessorTests {
 
         MetricsProcessor.setupWorkload(2);
 
-        final AtomicInteger count = new AtomicInteger(0);
-        MetricsProcessor.processMetrics(data, (testStr.getBytes().length * 2) + 1, (byteData) -> {
-            count.incrementAndGet();
-        });
+        MetricsProcessor.processMetrics(data, (testStr.getBytes().length * 2) + 1, sender);
 
         assertEquals(count.intValue(), 1);
 
         // test that the first worker took half
         assertEquals(data.size(), 2);
-
-
     }
 }

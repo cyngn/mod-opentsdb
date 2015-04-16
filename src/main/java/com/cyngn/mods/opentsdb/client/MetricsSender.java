@@ -21,4 +21,5 @@ package com.cyngn.mods.opentsdb.client;
  */
 public interface MetricsSender {
     void sendData(byte [] data);
+    boolean isConnected();
 }

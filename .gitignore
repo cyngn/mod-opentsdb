@@ -6,3 +6,6 @@ build
 *.ipr
 *.iws
 *.DS_Store
+/bin/
+.classpath
+.project

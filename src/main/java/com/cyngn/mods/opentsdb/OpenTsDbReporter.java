@@ -37,11 +37,14 @@ import java.util.function.Consumer;
 public class OpenTsDbReporter extends BusModBase implements Handler<Message<JsonObject>> {
 
     public static final String ADD_COMMAND = "add";
+    public static final int OPENTSDB_DEFAULT_MAX_TAGS = 8;
 
     private JsonArray hosts;
     private final int DEFAULT_MTU = 1500;
     private int maxBufferSizeInBytes;
     private BlockingQueue<String> metrics;
+    private int maxTags;
+    private int defaultTagCount;
 
     private Map<String, Consumer<Message<JsonObject>>> handlers;
     private List<MetricsWorker> workers;
@@ -56,7 +59,14 @@ public class OpenTsDbReporter extends BusModBase implements Handler<Message<Json
         maxBufferSizeInBytes = getOptionalIntConfig("maxBufferSizeInBytes", DEFAULT_MTU);
         String prefix = getOptionalStringConfig("prefix", null);
         address = getOptionalStringConfig("address", "vertx.opentsdb-reporter");
-        String defaultTags = Util.createTagsFromJson(config.getObject("tags"));
+        maxTags = getOptionalIntConfig("maxTags", OPENTSDB_DEFAULT_MAX_TAGS);
+        final JsonObject configuredTags = config.getObject("tags");
+        if (configuredTags != null && configuredTags.size() > maxTags) {
+            // not sure the right way to handle this, waiting for CR feedback
+            throw new IllegalStateException("Found more default tags than the max (" + maxTags + ")");
+        }
+        defaultTagCount = configuredTags.size();
+        String defaultTags = Util.createTagsFromJson(configuredTags);
 
         metricsParser = new MetricsParser(prefix, defaultTags, this::sendError);
 
@@ -99,6 +109,13 @@ public class OpenTsDbReporter extends BusModBase implements Handler<Message<Json
     }
 
     private void processMetric(Message<JsonObject> message) {
+        final JsonObject tags = message.body().getObject("tags");
+        if (tags != null && defaultTagCount + tags.size() > maxTags) {
+            // the metric will be rejected by TSD, so don't even send it
+            sendError(message, "You specified too many tags");
+            return;
+        }
+
         String metricStr = metricsParser.createMetricString(message);
         if (metricStr != null) {
             // put the metric in the work queue

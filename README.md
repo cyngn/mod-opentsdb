@@ -17,18 +17,20 @@ The mod-opentsdb module takes the following configuration:
     {
         "address" : <address>,
         "hosts" : [{"host" : <host1>, "port" : <host1Port>}, {"host" : <host2>, "port" : <host2Port>}],
-        "maxBufferSizeInBytes" : <default 1500>  
+        "maxBufferSizeInBytes" : <default 1500>,
         "prefix" : <prefix>,
-        "tags" : { "key1" : "value1", "key2" : "value2"}
+        "tags" : { "key1" : "value1", "key2" : "value2"},
+        "maxTags" : <default 8>
     }
-    
+
 For example:
 
     {
-        "address" : ""opentsdb-metrics",
+        "address" : "opentsdb-metrics",
         "hosts" : [{"host" : "localhost", "port" : 4242}],
         "prefix" : "myTestService",
-        "tags" : { "host" : "mytesthost.com", "service" : "myTestService", "region" : "us-west1"}    
+        "tags" : { "host" : "mytesthost.com", "service" : "myTestService", "region" : "us-west1"},
+        "maxTags" : 4
     }
 
 Field breakdown:
@@ -38,6 +40,7 @@ Field breakdown:
 * `maxBufferSizeInBytes` The max bytes to send in any send to OpenTsDb, defaults to MTU of 1500 bytes.
 * `prefix` The prefix to pre-pend to all metrics, defaults to nothing. If you set it it will add "[yourPrefix]." to all your metrics. 
 * `tags` The map of tags to send a long by default with all metrics. These are tags you would always want associated with every metric your service is publishing the default is to have no default tags.
+* `maxTags` The max number of tags that the OpenTsdb is configured to handle.  By default, OpenTsdb instances can handle 8, thus we use it as the default here.  If you increase it, make sure all of your OpenTsdb instances have been configured correctly.
 
 ## Operations
 

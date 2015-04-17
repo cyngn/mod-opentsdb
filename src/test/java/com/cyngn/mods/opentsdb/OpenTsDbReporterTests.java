@@ -46,6 +46,7 @@ public class OpenTsDbReporterTests extends TestVerticle {
         JsonArray array = new JsonArray();
         array.add(new JsonObject().putString("host", "localhost").putNumber("port", 4242));
         config.putArray("hosts", array);
+        config.putNumber("maxTags", 1);
 
         container.deployModule(System.getProperty("vertx.modulename"), config, 1, new AsyncResultHandler<String>() {
             @Override
@@ -94,6 +95,21 @@ public class OpenTsDbReporterTests extends TestVerticle {
         metric.putObject("tags", new JsonObject().putString("foo", "bar"));
         eb.send(topic, metric, (Message<JsonObject> result) -> {
             assertEquals("ok", result.body().getString("status"));
+            testComplete();
+        });
+    }
+
+    @Test
+    public void testTooManyTags() throws Exception {
+        JsonObject metric = new JsonObject();
+        metric.putString("action", OpenTsDbReporter.ADD_COMMAND);
+        metric.putString("name", "test.value");
+        metric.putString("value", "34.4");
+        metric.putObject("tags",
+                         new JsonObject().putString("foo", "bar")
+                                         .putString("var", "val"));
+        eb.send(topic, metric, (Message<JsonObject> result) -> {
+            assertEquals("error", result.body().getString("status"));
             testComplete();
         });
     }

@@ -36,8 +36,12 @@ public class Util {
             for (String key : tags.getFieldNames()) {
                 builder.append(key).append("=").append(tags.getString(key)).append(" ");
             }
-            // grab all but th
-            tagsString = builder.substring(0, builder.length() -1);
+            // if necessary, grab all but the last character, since it's always a space
+            if (builder.length() > 0) {
+                tagsString = builder.substring(0, builder.length() -1);
+            } else {
+                tagsString = builder.toString();
+            }
         }
 
         return tagsString;

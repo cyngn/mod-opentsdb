@@ -68,6 +68,10 @@ public class OpenTsDbReporter extends BusModBase implements Handler<Message<Json
         defaultTagCount = configuredTags != null ? configuredTags.size() : 0;
         String defaultTags = Util.createTagsFromJson(configuredTags);
 
+        if(defaultTags != null && !"".equals(defaultTags)){
+            logger.info("Using default tags: " + defaultTags + " for all metrics");
+        }
+
         metricsParser = new MetricsParser(prefix, defaultTags, this::sendError);
 
         if (hosts.size() > 1) {

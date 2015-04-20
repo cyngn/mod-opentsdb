@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.cyngn.mods.opentsdb.client;
+package com.cyngn.vertx.opentsdb.client;
+
+import io.vertx.core.buffer.Buffer;
 
 /**
  * Handles sending data to OpenTsDb
@@ -20,6 +22,8 @@ package com.cyngn.mods.opentsdb.client;
  * @author truelove@cyngn.com (Jeremy Truelove) 10/24/14
  */
 public interface MetricsSender {
-    void sendData(byte [] data);
+    boolean write(Buffer data);
     boolean isConnected();
+    void close();
+    void dumpStats();
 }

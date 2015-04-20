@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.cyngn.mods.opentsdb;
+package com.cyngn.vertx.opentsdb;
 
+import io.vertx.core.json.JsonObject;
 import org.junit.Test;
-import org.vertx.java.core.json.JsonObject;
 
 import static org.junit.Assert.assertEquals;
 
@@ -26,7 +26,7 @@ public class UtilTests {
 
     @Test
     public void testTags() {
-        String tags = Util.createTagsFromJson(new JsonObject().putString("foo", "bar").putString("bar", "foo"));
+        String tags = Util.createTagsFromJson(new JsonObject().put("foo", "bar").put("bar", "foo"));
         assertEquals(tags, "foo=bar bar=foo");
     }
 

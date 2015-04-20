@@ -12,12 +12,15 @@
  * See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.cyngn.mods.opentsdb;
+package com.cyngn.vertx.opentsdb;
 
-import com.cyngn.mods.opentsdb.client.MetricsSender;
+import com.cyngn.vertx.opentsdb.client.MetricsSender;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.EventBus;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,22 +32,49 @@ import static org.junit.Assert.assertEquals;
 public class MetricsProcessorTests {
 
     private MetricsSender sender;
+    private MetricsSender sender2;
     private AtomicInteger count;
+    private AtomicInteger count2;
+    private MetricsProcessor processor;
+    private AtomicInteger count3;
+    private MetricsSender sender3;
 
     @Before
     public void setUp(){
-        MetricsProcessor.setupWorkload(1);
         count = new AtomicInteger(0);
         sender = new MetricsSender() {
             @Override
-            public void sendData(byte[] data) {
-                count.incrementAndGet();
-            }
-
+            public boolean write(Buffer data) { count.incrementAndGet(); return true; }
             @Override
-            public boolean isConnected() {
-                return true;
-            }
+            public boolean isConnected() { return true; }
+            @Override
+            public void close() {  }
+            @Override
+            public void dumpStats() {  }
+        };
+
+        count2 = new AtomicInteger(0);
+        sender2 = new MetricsSender() {
+            @Override
+            public boolean write(Buffer data) { count2.incrementAndGet(); return true; }
+            @Override
+            public boolean isConnected() { return true; }
+            @Override
+            public void close() {  }
+            @Override
+            public void dumpStats() {  }
+        };
+
+        count3 = new AtomicInteger(0);
+        sender3 = new MetricsSender() {
+            @Override
+            public boolean write(Buffer data) { count3.incrementAndGet(); return true; }
+            @Override
+            public boolean isConnected() { return true; }
+            @Override
+            public void close() {  }
+            @Override
+            public void dumpStats() {  }
         };
     }
 
@@ -56,9 +86,14 @@ public class MetricsProcessorTests {
         // add more data into queue
         data.add(testStr);
         data.add(testStr);
-        MetricsProcessor.processMetrics(data, testStr.getBytes().length * 3, sender);
+
+        processor = new MetricsProcessor(Arrays.asList(sender), testStr.getBytes().length * 3, null);
+
+        processor.processMetrics(data);
         assertEquals(count.intValue(), 1);
     }
+
+
 
     @Test
     public void testMaxBuffer() {
@@ -68,7 +103,8 @@ public class MetricsProcessorTests {
         data.add(testStr);
         data.add(testStr);
 
-        MetricsProcessor.processMetrics(data, testStr.getBytes().length, sender);
+        processor = new MetricsProcessor(Arrays.asList(sender), testStr.getBytes().length, null);
+        processor.processMetrics(data);
 
         assertEquals(count.intValue(), 2);
     }
@@ -83,13 +119,11 @@ public class MetricsProcessorTests {
         data.add(testStr);
         data.add(testStr);
 
-        MetricsProcessor.setupWorkload(2);
-
-        MetricsProcessor.processMetrics(data, (testStr.getBytes().length * 2) + 1, sender);
+        processor = new MetricsProcessor(Arrays.asList(sender, sender2, sender3), (testStr.getBytes().length * 2) + 1, null);
+        processor.processMetrics(data);
 
         assertEquals(count.intValue(), 1);
-
-        // test that the first worker took half
-        assertEquals(data.size(), 2);
+        assertEquals(count2.intValue(), 1);
+        assertEquals(count3.intValue(), 1);
     }
 }

@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.cyngn.mods.opentsdb;
+package com.cyngn.vertx.opentsdb;
 
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonObject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonObject;
 
 import java.util.function.BiConsumer;
 
@@ -58,9 +58,9 @@ public class MetricsParser {
         }
 
         String tags = defaultTags;
-        if (body.containsField(TAGS_FIELD)) {
+        if (body.containsKey(TAGS_FIELD)) {
             String padding = tags.equals("") ? "" : " ";
-            tags += padding + Util.createTagsFromJson(body.getObject(TAGS_FIELD));
+            tags += padding + Util.createTagsFromJson(body.getJsonObject(TAGS_FIELD));
         }
 
         // this is an OpenTsDB requirement

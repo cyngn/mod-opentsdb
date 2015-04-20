@@ -12,13 +12,16 @@
  * See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.cyngn.mods.opentsdb;
+package com.cyngn.vertx.opentsdb;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
+import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.eventbus.impl.JsonObjectMessage;
-import org.vertx.java.core.json.JsonObject;
 
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
@@ -34,6 +37,36 @@ public class MetricsParserTests  {
     private BiConsumer<Message<JsonObject>, String> errorHandler;
     private Integer count;
 
+    private Message<JsonObject> getTestMessage(JsonObject obj) {
+        return new Message<JsonObject>() {
+            @Override
+            public String address() { return null; }
+
+            @Override public MultiMap headers() { return null; }
+
+            @Override public JsonObject body() { return obj; }
+
+            @Override
+            public String replyAddress() { return null; }
+
+            @Override
+            public void reply(Object message) {  }
+
+            @Override
+            public <R> void reply(Object message, Handler<AsyncResult<Message<R>>> replyHandler) {  }
+
+            @Override
+            public void reply(Object message, DeliveryOptions options) {  }
+
+            @Override
+            public <R> void reply(Object message, DeliveryOptions options, Handler<AsyncResult<Message<R>>> replyHandler) {  }
+
+            @Override
+            public void fail(int failureCode, String message) {  }
+        };
+    }
+
+
     @Before
     public void setUp() {
         count = 0;
@@ -43,11 +76,12 @@ public class MetricsParserTests  {
     @Test
     public void missingNameTest() {
         JsonObject metric = new JsonObject();
-        metric.putString("action", OpenTsDbReporter.ADD_COMMAND);
-        metric.putString("value", "34.4");
-        metric.putObject("tags", new JsonObject().putString("foo", "bar"));
+        metric.put("action", OpenTsDbReporter.ADD_COMMAND);
+        metric.put("value", "34.4");
+        metric.put("tags", new JsonObject().put("foo", "bar"));
 
-        Message<JsonObject> msg = new JsonObjectMessage(false, "foo", metric);
+
+        Message<JsonObject> msg = getTestMessage(metric);
 
         MetricsParser parser = new MetricsParser(null, "", errorHandler);
         String result = parser.createMetricString(msg);
@@ -59,11 +93,11 @@ public class MetricsParserTests  {
     @Test
     public void missingValueTest() {
         JsonObject metric = new JsonObject();
-        metric.putString("action", OpenTsDbReporter.ADD_COMMAND);
-        metric.putString("name", "test.value");
-        metric.putObject("tags", new JsonObject().putString("foo", "bar"));
+        metric.put("action", OpenTsDbReporter.ADD_COMMAND);
+        metric.put("name", "test.value");
+        metric.put("tags", new JsonObject().put("foo", "bar"));
 
-        Message<JsonObject> msg = new JsonObjectMessage(false, "foo", metric);
+        Message<JsonObject> msg = getTestMessage(metric);
 
         MetricsParser parser = new MetricsParser(null, "", errorHandler);
         String result = parser.createMetricString(msg);
@@ -75,11 +109,11 @@ public class MetricsParserTests  {
     @Test
     public void missingTagsTest() {
         JsonObject metric = new JsonObject();
-        metric.putString("action", OpenTsDbReporter.ADD_COMMAND);
-        metric.putString("name", "test.value");
-        metric.putString("value", "17");
+        metric.put("action", OpenTsDbReporter.ADD_COMMAND);
+        metric.put("name", "test.value");
+        metric.put("value", "17");
 
-        Message<JsonObject> msg = new JsonObjectMessage(false, "foo", metric);
+        Message<JsonObject> msg = getTestMessage(metric);
 
         MetricsParser parser = new MetricsParser(null, "", errorHandler);
         String result = parser.createMetricString(msg);
@@ -91,11 +125,11 @@ public class MetricsParserTests  {
     @Test
     public void defaultTagsTest() {
         JsonObject metric = new JsonObject();
-        metric.putString("action", OpenTsDbReporter.ADD_COMMAND);
-        metric.putString("name", "test.value");
-        metric.putString("value", "17");
+        metric.put("action", OpenTsDbReporter.ADD_COMMAND);
+        metric.put("name", "test.value");
+        metric.put("value", "17");
 
-        Message<JsonObject> msg = new JsonObjectMessage(false, "foo", metric);
+        Message<JsonObject> msg = getTestMessage(metric);
 
         MetricsParser parser = new MetricsParser(null, "foo=bar", errorHandler);
         String result = parser.createMetricString(msg);
@@ -107,12 +141,12 @@ public class MetricsParserTests  {
     @Test
     public void parseTestSimple() {
         JsonObject metric = new JsonObject();
-        metric.putString("action", OpenTsDbReporter.ADD_COMMAND);
-        metric.putString("name", "test.value");
-        metric.putString("value", "17");
-        metric.putObject("tags", new JsonObject().putString("tag1", "val1").putString("tag2", "val2"));
+        metric.put("action", OpenTsDbReporter.ADD_COMMAND);
+        metric.put("name", "test.value");
+        metric.put("value", "17");
+        metric.put("tags", new JsonObject().put("tag1", "val1").put("tag2", "val2"));
 
-        Message<JsonObject> msg = new JsonObjectMessage(false, "foo", metric);
+        Message<JsonObject> msg = getTestMessage(metric);
 
         MetricsParser parser = new MetricsParser(null, "foo=bar", errorHandler);
         String result = parser.createMetricString(msg);
@@ -124,12 +158,12 @@ public class MetricsParserTests  {
     @Test
     public void parseTestNoDefaultTags() {
         JsonObject metric = new JsonObject();
-        metric.putString("action", OpenTsDbReporter.ADD_COMMAND);
-        metric.putString("name", "test.value");
-        metric.putString("value", "17");
-        metric.putObject("tags", new JsonObject().putString("tag1", "val1").putString("tag2", "val2"));
+        metric.put("action", OpenTsDbReporter.ADD_COMMAND);
+        metric.put("name", "test.value");
+        metric.put("value", "17");
+        metric.put("tags", new JsonObject().put("tag1", "val1").put("tag2", "val2"));
 
-        Message<JsonObject> msg = new JsonObjectMessage(false, "foo", metric);
+        Message<JsonObject> msg = getTestMessage(metric);
 
         MetricsParser parser = new MetricsParser(null, null, errorHandler);
         String result = parser.createMetricString(msg);
@@ -141,12 +175,12 @@ public class MetricsParserTests  {
     @Test
     public void parseTestPrefix() {
         JsonObject metric = new JsonObject();
-        metric.putString("action", OpenTsDbReporter.ADD_COMMAND);
-        metric.putString("name", "test.value");
-        metric.putString("value", "17");
-        metric.putObject("tags", new JsonObject().putString("tag1", "val1").putString("tag2", "val2"));
+        metric.put("action", OpenTsDbReporter.ADD_COMMAND);
+        metric.put("name", "test.value");
+        metric.put("value", "17");
+        metric.put("tags", new JsonObject().put("tag1", "val1").put("tag2", "val2"));
 
-        Message<JsonObject> msg = new JsonObjectMessage(false, "foo", metric);
+        Message<JsonObject> msg = getTestMessage(metric);
 
         MetricsParser parser = new MetricsParser("test.service", "foo=bar", errorHandler);
         String result = parser.createMetricString(msg);

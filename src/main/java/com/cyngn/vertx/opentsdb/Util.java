@@ -12,9 +12,10 @@
  * See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.cyngn.mods.opentsdb;
+package com.cyngn.vertx.opentsdb;
 
-import org.vertx.java.core.json.JsonObject;
+
+import io.vertx.core.json.JsonObject;
 
 /**
  * General purpose utils
@@ -33,7 +34,7 @@ public class Util {
         String tagsString = "";
         if (tags != null && tags.size() > 0) {
             StringBuilder builder = new StringBuilder();
-            for (String key : tags.getFieldNames()) {
+            for (String key : tags.fieldNames()) {
                 builder.append(key).append("=").append(tags.getString(key)).append(" ");
             }
             // if necessary, grab all but the last character, since it's always a space

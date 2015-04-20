@@ -82,6 +82,7 @@ public class OpenTsDbReporter extends BusModBase implements Handler<Message<Json
         createMessageHandlers();
 
         eb.registerHandler(address, this);
+        startedResult.complete();
     }
 
     private void initializeWorkers() {

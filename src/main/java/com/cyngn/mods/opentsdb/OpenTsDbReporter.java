@@ -65,7 +65,7 @@ public class OpenTsDbReporter extends BusModBase implements Handler<Message<Json
         if (configuredTags != null && configuredTags.size() > maxTags) {
             startedResult.setFailure(new IllegalStateException("Found more default tags than the max (" + maxTags + ")"));
         }
-        defaultTagCount = configuredTags.size();
+        defaultTagCount = configuredTags != null ? configuredTags.size() : 0;
         String defaultTags = Util.createTagsFromJson(configuredTags);
 
         metricsParser = new MetricsParser(prefix, defaultTags, this::sendError);
@@ -82,7 +82,7 @@ public class OpenTsDbReporter extends BusModBase implements Handler<Message<Json
         createMessageHandlers();
 
         eb.registerHandler(address, this);
-        startedResult.complete();
+        startedResult.setResult(null);
     }
 
     private void initializeWorkers() {

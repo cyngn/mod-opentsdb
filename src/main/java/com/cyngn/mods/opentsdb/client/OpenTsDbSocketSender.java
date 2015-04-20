@@ -134,6 +134,7 @@ public class OpenTsDbSocketSender implements MetricsSender, Closeable {
         try {
             openTsDbConnection = new Socket(host, port);
             openTsDbConnection.setKeepAlive(true);
+            openTsDbConnection.setTcpNoDelay(true);
             openTsDbConnection.setSoTimeout(READ_TIMEOUT_MILLI); // set the reads to time out in half a second without data
             metricsInputStream = openTsDbConnection.getInputStream();
             metricsOutputStream = openTsDbConnection.getOutputStream();
@@ -200,6 +201,7 @@ public class OpenTsDbSocketSender implements MetricsSender, Closeable {
             disconnectCountForQuietPeriod.incrementAndGet();
             succeeded = false;
             silentClose();
+            logger.error("Got exception ex: ", ex);
         }
         return succeeded;
     }
@@ -215,6 +217,11 @@ public class OpenTsDbSocketSender implements MetricsSender, Closeable {
                 int count = metricsInputStream.read(readBuffer);
                 if (count > 0) {
                     logger.error("Got error response from OpenTsDb, error: " + new String(readBuffer, 0, count));
+                }
+                if (count == -1) {
+                    // this is the end of the file, which means no more data will ever come
+                    //  not on this read or the next.  here we should close the socket.
+                    throw new IOException("saw EOF on the socket, probably closed");
                 }
             } catch (SocketTimeoutException ste) {
                 logger.debug("No errors read from OpenTsDb in the last " + TEN_SECONDS + "(s)");

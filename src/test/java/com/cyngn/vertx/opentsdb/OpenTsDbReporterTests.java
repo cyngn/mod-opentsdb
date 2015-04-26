@@ -55,7 +55,7 @@ public class OpenTsDbReporterTests {
         JsonObject config = new JsonObject();
         config.put("address", topic);
         JsonArray array = new JsonArray();
-        array.add(new JsonObject().put("host", "hbase01.dev.sjc.cyanogen.net").put("port", 4242));
+        array.add(new JsonObject().put("host", "localhost").put("port", 4242));
         config.put("hosts", array);
         config.put("maxTags", 1);
 

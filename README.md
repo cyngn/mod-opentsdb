@@ -1,3 +1,6 @@
+## NOTE all active dev has moved to [vertx-opentsdb](https://github.com/cyngn/vertx-opentsdb), master points at a vertx3 build, a vertx 2 build can be found on the vertx-2.1.5 branch
+
+
 # Mod OpenTsDb
 
 This module allows you to save metrics into an OpenTsDb cluster. Which is a time series db for tracking service and business metrics.
